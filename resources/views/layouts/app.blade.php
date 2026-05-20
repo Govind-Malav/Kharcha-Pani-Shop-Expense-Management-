@@ -455,27 +455,66 @@
                 <div class="space-y-1.5 text-2xs">
                     <span class="block font-bold text-slate-500 uppercase tracking-wider">Try saying:</span>
                     <div class="divide-y divide-slate-100 bg-slate-50 rounded-xl border border-slate-100 overflow-hidden">
-                        <div class="p-2 text-slate-600 flex justify-between items-center hover:bg-slate-100/50">
-                            <span class="font-semibold" x-text="lang === 'hi-IN' ? 'किराया खर्चा 15000' : 'Add expense Rent 15000'"></span>
-                            <span class="text-slate-450 font-medium">Record Expense</span>
-                        </div>
-                        <div class="p-2 text-slate-600 flex justify-between items-center hover:bg-slate-100/50">
-                            <span class="font-semibold" x-text="lang === 'hi-IN' ? 'बेचा 500' : 'Add sale 500'"></span>
-                            <span class="text-slate-450 font-medium">POS Order</span>
-                        </div>
-                        <div class="p-2 text-slate-600 flex justify-between items-center hover:bg-slate-100/50">
-                            <span class="font-semibold" x-text="lang === 'hi-IN' ? 'खर्चा पर जाओ' : 'Go to Expenses'"></span>
-                            <span class="text-slate-450 font-medium">Navigation</span>
-                        </div>
-                        <div class="p-2 text-slate-600 flex justify-between items-center hover:bg-slate-100/50">
-                            <span class="font-semibold" x-text="lang === 'hi-IN' ? 'चावल ढूंढो' : 'Search Rice'"></span>
-                            <span class="text-slate-450 font-medium">Search stock</span>
-                        </div>
-                        <!-- POS Page specific hint -->
-                        <div x-show="window.location.pathname.includes('/sales/create')" class="p-2 text-indigo-700 bg-indigo-50/40 flex justify-between items-center hover:bg-indigo-50">
-                            <span class="font-bold" x-text="lang === 'hi-IN' ? 'मक्खन जोड़ो' : 'Add Butter'"></span>
-                            <span class="font-bold text-indigo-500">Cart Command</span>
-                        </div>
+                        @if(auth()->user()->isOwner())
+                            <div class="p-2 text-slate-600 flex justify-between items-center hover:bg-slate-100/50">
+                                <span class="font-semibold" x-text="lang === 'hi-IN' ? 'किराया खर्चा 15000' : 'Add expense Rent 15000'"></span>
+                                <span class="text-slate-450 font-medium">Record Expense</span>
+                            </div>
+                            <div class="p-2 text-slate-600 flex justify-between items-center hover:bg-slate-100/50">
+                                <span class="font-semibold" x-text="lang === 'hi-IN' ? 'बेचा 500' : 'Add sale 500'"></span>
+                                <span class="text-slate-450 font-medium">POS Order</span>
+                            </div>
+                            <div class="p-2 text-slate-600 flex justify-between items-center hover:bg-slate-100/50">
+                                <span class="font-semibold" x-text="lang === 'hi-IN' ? 'सेटिंग पर जाओ' : 'Go to Settings'"></span>
+                                <span class="text-slate-450 font-medium">Navigation</span>
+                            </div>
+                            <div class="p-2 text-slate-600 flex justify-between items-center hover:bg-slate-100/50">
+                                <span class="font-semibold" x-text="lang === 'hi-IN' ? 'चावल ढूंढो' : 'Search Rice'"></span>
+                                <span class="text-slate-450 font-medium">Search stock</span>
+                            </div>
+                        @elseif(auth()->user()->isStaff())
+                            <div class="p-2 text-slate-600 flex justify-between items-center hover:bg-slate-100/50">
+                                <span class="font-semibold" x-text="lang === 'hi-IN' ? 'किराया खर्चा 15000' : 'Add expense Rent 15000'"></span>
+                                <span class="text-slate-450 font-medium">Record Expense</span>
+                            </div>
+                            <div class="p-2 text-slate-600 flex justify-between items-center hover:bg-slate-100/50">
+                                <span class="font-semibold" x-text="lang === 'hi-IN' ? 'बेचा 500' : 'Add sale 500'"></span>
+                                <span class="text-slate-450 font-medium">POS Order</span>
+                            </div>
+                            <div class="p-2 text-slate-600 flex justify-between items-center hover:bg-slate-100/50">
+                                <span class="font-semibold" x-text="lang === 'hi-IN' ? 'चावल ढूंढो' : 'Search Rice'"></span>
+                                <span class="text-slate-450 font-medium">Search stock</span>
+                            </div>
+                            <div class="p-2 text-slate-600 flex justify-between items-center hover:bg-slate-100/50">
+                                <span class="font-semibold" x-text="lang === 'hi-IN' ? 'उधार पर जाओ' : 'Go to Credits'"></span>
+                                <span class="text-slate-450 font-medium">Navigation</span>
+                            </div>
+                        @elseif(auth()->user()->isAccountant())
+                            <div class="p-2 text-slate-600 flex justify-between items-center hover:bg-slate-100/50">
+                                <span class="font-semibold" x-text="lang === 'hi-IN' ? 'रिपोर्ट पर जाओ' : 'Go to Reports'"></span>
+                                <span class="text-slate-450 font-medium">Reports & Ledger</span>
+                            </div>
+                            <div class="p-2 text-slate-600 flex justify-between items-center hover:bg-slate-100/50">
+                                <span class="font-semibold" x-text="lang === 'hi-IN' ? 'खर्चा पर जाओ' : 'Go to Expenses'"></span>
+                                <span class="text-slate-450 font-medium">View Expenses</span>
+                            </div>
+                            <div class="p-2 text-slate-600 flex justify-between items-center hover:bg-slate-100/50">
+                                <span class="font-semibold" x-text="lang === 'hi-IN' ? 'चावल ढूंढो' : 'Search Rice'"></span>
+                                <span class="text-slate-450 font-medium">Search stock</span>
+                            </div>
+                            <div class="p-2 text-slate-600 flex justify-between items-center hover:bg-slate-100/50">
+                                <span class="font-semibold" x-text="lang === 'hi-IN' ? 'डैशबोर्ड पर जाओ' : 'Go to Dashboard'"></span>
+                                <span class="text-slate-450 font-medium">Overview</span>
+                            </div>
+                        @endif
+
+                        <!-- POS Page specific hint (restricted to Owner and Staff) -->
+                        @if(auth()->user()->isOwner() || auth()->user()->isStaff())
+                            <div x-show="window.location.pathname.includes('/sales/create')" class="p-2 text-indigo-700 bg-indigo-50/40 flex justify-between items-center hover:bg-indigo-50">
+                                <span class="font-bold" x-text="lang === 'hi-IN' ? 'मक्खन जोड़ो' : 'Add Butter'"></span>
+                                <span class="font-bold text-indigo-500">Cart Command</span>
+                            </div>
+                        @endif
                     </div>
                 </div>
 
@@ -493,6 +532,7 @@
                     recognition: null,
                     synth: window.speechSynthesis,
                     waveActive: false,
+                    userRole: '{{ auth()->user()->role }}',
 
                     init() {
                         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -588,6 +628,11 @@
                         // English: "add expense rent 15000" / "add expense electricity 3200"
                         const expMatchEn = cleanText.match(/(?:add\s+expense|record\s+expense|record\s+spend)\s+(?:for\s+)?(.+?)\s+(?:of\s+)?(?:rs\.?|inr|rupees)?\s*(\d+(?:\.\d+)?)/i);
                         if (expMatchEn) {
+                            if (this.userRole === 'accountant') {
+                                this.speak(this.lang === 'hi-IN' ? "माफ़ कीजिए, मुनीम को खर्चा दर्ज करने की अनुमति नहीं है।" : "Sorry, accountants are not authorized to record expenses.");
+                                this.status = this.lang === 'hi-IN' ? "अनुमति नहीं है" : "Permission Denied";
+                                return;
+                            }
                             const title = expMatchEn[1];
                             const amount = expMatchEn[2];
                             this.speak(`Recording expense for ${title} of ${amount} rupees.`);
@@ -601,6 +646,11 @@
                         const expMatchHi = cleanText.match(/(.+?)\s+(?:का\s+)?खर्चा\s+(?:रुपया|रुपये)?\s*(\d+)/i) || 
                                            cleanText.match(/(\d+)\s*(?:रुपया|रुपये)?\s*(?:का\s+)?(.+?)\s+खर्चा/i);
                         if (expMatchHi) {
+                            if (this.userRole === 'accountant') {
+                                this.speak(this.lang === 'hi-IN' ? "माफ़ कीजिए, मुनीम को खर्चा दर्ज करने की अनुमति नहीं है।" : "Sorry, accountants are not authorized to record expenses.");
+                                this.status = this.lang === 'hi-IN' ? "अनुमति नहीं है" : "Permission Denied";
+                                return;
+                            }
                             let title, amount;
                             if (isNaN(expMatchHi[1].trim())) {
                                 title = expMatchHi[1].trim();
@@ -618,19 +668,47 @@
 
                         // 2. Navigation Commands
                         // English: "go to dashboard" / "go to sales"
-                        const navMatchEn = cleanText.match(/go\s+to\s+(dashboard|sales|pos|expenses|inventory|stock|credits|udhaar|settings)/i);
+                        const navMatchEn = cleanText.match(/go\s+to\s+(dashboard|sales|pos|expenses|inventory|stock|credits|udhaar|settings|reports|analytics)/i);
                         if (navMatchEn) {
                             const target = navMatchEn[1];
+                            
+                            // Guard settings
+                            if (target === 'settings' && this.userRole !== 'owner') {
+                                this.speak(this.lang === 'hi-IN' ? "माफ़ कीजिए, केवल दुकान के मालिक ही सेटिंग देख सकते हैं।" : "Sorry, only the shop owner is authorized to view settings.");
+                                this.status = this.lang === 'hi-IN' ? "अनुमति नहीं है" : "Permission Denied";
+                                return;
+                            }
+                            // Guard reports / analytics for staff
+                            if ((target === 'reports' || target === 'analytics') && this.userRole === 'staff') {
+                                this.speak(this.lang === 'hi-IN' ? "माफ़ कीजिए, स्टाफ़ को रिपोर्ट देखने की अनुमति नहीं है।" : "Sorry, staff are not authorized to view reports.");
+                                this.status = this.lang === 'hi-IN' ? "अनुमति नहीं है" : "Permission Denied";
+                                return;
+                            }
+
                             this.speak("Navigating to " + target);
                             setTimeout(() => this.redirect(target), 1000);
                             return;
                         }
 
                         // Hindi: "डैशबोर्ड पर जाओ" / "बिक्री पर जाओ"
-                        const navMatchHi = cleanText.match(/(डैशबोर्ड|बिक्री|खर्चा|सामान|स्टॉक|उधार|सेटिंग)\s*(?:पर\s+)?जाओ/i);
+                        const navMatchHi = cleanText.match(/(डैशबोर्ड|बिक्री|खर्चा|सामान|स्टॉक|उधार|सेटिंग|रिपोर्ट|विश्लेषण)\s*(?:पर\s+)?जाओ/i);
                         if (navMatchHi) {
                             const target = navMatchHi[1];
                             const engTarget = this.mapHindiNav(target);
+
+                            // Guard settings
+                            if (engTarget === 'settings' && this.userRole !== 'owner') {
+                                this.speak(this.lang === 'hi-IN' ? "माफ़ कीजिए, केवल दुकान के मालिक ही सेटिंग देख सकते हैं।" : "Sorry, only the shop owner is authorized to view settings.");
+                                this.status = this.lang === 'hi-IN' ? "अनुमति नहीं है" : "Permission Denied";
+                                return;
+                            }
+                            // Guard reports / analytics for staff
+                            if ((engTarget === 'reports' || engTarget === 'analytics') && this.userRole === 'staff') {
+                                this.speak(this.lang === 'hi-IN' ? "माफ़ कीजिए, स्टाफ़ को रिपोर्ट देखने की अनुमति नहीं है।" : "Sorry, staff are not authorized to view reports.");
+                                this.status = this.lang === 'hi-IN' ? "अनुमति नहीं है" : "Permission Denied";
+                                return;
+                            }
+
                             this.speak(target + " पर जा रहे हैं");
                             setTimeout(() => this.redirect(engTarget), 1000);
                             return;
@@ -640,6 +718,11 @@
                         // English: "add rice" / "add butter"
                         const addPosMatchEn = cleanText.match(/(?:add|insert)\s+(.+?)(?:\s+to\s+cart)?$/i);
                         if (addPosMatchEn && window.location.pathname.includes('/sales/create')) {
+                            if (this.userRole === 'accountant') {
+                                this.speak(this.lang === 'hi-IN' ? "माफ़ कीजिए, मुनीम कार्ट में बदलाव नहीं कर सकते।" : "Sorry, accountants are not authorized to edit the cart.");
+                                this.status = this.lang === 'hi-IN' ? "अनुमति नहीं है" : "Permission Denied";
+                                return;
+                            }
                             const productName = addPosMatchEn[1];
                             this.speak("Adding " + productName);
                             window.dispatchEvent(new CustomEvent('voice-add-item', { detail: { query: productName } }));
@@ -650,6 +733,11 @@
                         // Hindi: "चावल जोड़ो" / "मक्खन जोड़ो"
                         const addPosMatchHi = cleanText.match(/(.+?)\s+(?:जोड़ो|ऐड करो|ऐड करो)$/i);
                         if (addPosMatchHi && window.location.pathname.includes('/sales/create')) {
+                            if (this.userRole === 'accountant') {
+                                this.speak(this.lang === 'hi-IN' ? "माफ़ कीजिए, मुनीम कार्ट में बदलाव नहीं कर सकते।" : "Sorry, accountants are not authorized to edit the cart.");
+                                this.status = this.lang === 'hi-IN' ? "अनुमति नहीं है" : "Permission Denied";
+                                return;
+                            }
                             const productName = addPosMatchHi[1];
                             this.speak(productName + " जोड़ रहे हैं");
                             window.dispatchEvent(new CustomEvent('voice-add-item', { detail: { query: productName } }));
@@ -661,6 +749,11 @@
                         // English: "add sale 500" / "sell 500"
                         const saleMatchEn = cleanText.match(/(?:add\s+sale|record\s+sale|sell)\s+(?:of\s+)?(?:rs\.?|inr|rupees)?\s*(\d+(?:\.\d+)?)/i);
                         if (saleMatchEn) {
+                            if (this.userRole === 'accountant') {
+                                this.speak(this.lang === 'hi-IN' ? "माफ़ कीजिए, मुनीम बिक्री दर्ज नहीं कर सकते।" : "Sorry, accountants are not authorized to record sales.");
+                                this.status = this.lang === 'hi-IN' ? "अनुमति नहीं है" : "Permission Denied";
+                                return;
+                            }
                             const amount = saleMatchEn[1];
                             this.speak(`Recording walk-in sale of ${amount} rupees.`);
                             setTimeout(() => {
@@ -672,6 +765,11 @@
                         // Hindi: "बिक्री 500" / "बेचा 500"
                         const saleMatchHi = cleanText.match(/(?:बेचा|बिक्री|सेल)\s*(?:रुपया|रुपये)?\s*(\d+)/i);
                         if (saleMatchHi) {
+                            if (this.userRole === 'accountant') {
+                                this.speak(this.lang === 'hi-IN' ? "माफ़ कीजिए, मुनीम बिक्री दर्ज नहीं कर सकते।" : "Sorry, accountants are not authorized to record sales.");
+                                this.status = this.lang === 'hi-IN' ? "अनुमति नहीं है" : "Permission Denied";
+                                return;
+                            }
                             const amount = saleMatchHi[1];
                             this.speak(`${amount} रुपये की बिक्री दर्ज कर रहे हैं`);
                             setTimeout(() => {
@@ -718,7 +816,9 @@
                             stock: "{{ route('inventory.index') }}",
                             credits: "{{ route('credits.index') }}",
                             udhaar: "{{ route('credits.index') }}",
-                            settings: "{{ route('settings.index') }}"
+                            settings: "{{ route('settings.index') }}",
+                            reports: "{{ route('reports.index') }}",
+                            analytics: "{{ route('analytics.index') }}"
                         };
                         if (routes[target]) {
                             window.location.href = routes[target];
@@ -733,7 +833,9 @@
                             'सामान': 'inventory',
                             'स्टॉक': 'inventory',
                             'उधार': 'credits',
-                            'सेटिंग': 'settings'
+                            'सेटिंग': 'settings',
+                            'रिपोर्ट': 'reports',
+                            'विश्लेषण': 'analytics'
                         };
                         return mapping[hiText] || 'dashboard';
                     }
