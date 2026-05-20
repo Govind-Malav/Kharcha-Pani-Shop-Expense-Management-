@@ -54,8 +54,8 @@ class DashboardController extends Controller
 
         $dbDriver = DB::connection()->getDriverName();
         if ($dbDriver === 'pgsql') {
-            $monthExpr = 'EXTRACT(MONTH FROM date) as month';
-            $groupByExpr = DB::raw('EXTRACT(MONTH FROM date)');
+            $monthExpr = 'EXTRACT(MONTH FROM "date") as month';
+            $groupByExpr = DB::raw('EXTRACT(MONTH FROM "date")');
         } elseif ($dbDriver === 'sqlite') {
             $monthExpr = 'cast(strftime("%m", date) as integer) as month';
             $groupByExpr = DB::raw('cast(strftime("%m", date) as integer)');
