@@ -1,0 +1,10 @@
+/node_modules
+/vendor
+.env
+.git
+.github
+/public/storage
+/storage/*.key
+.phpunit.result.cache
+.idea
+.vscode
