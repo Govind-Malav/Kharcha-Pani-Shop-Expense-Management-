@@ -372,6 +372,21 @@
         @endif
 
         <!-- Floating Voice Assistant -->
+        @php
+            try {
+                $shopName = \App\Models\ShopSetting::first()?->shop_name ?? "Kharcha Pani";
+                $todaySales = (float) \App\Models\Sale::whereDate('created_at', now()->today())->sum('total_amount');
+                $todayExpenses = (float) \App\Models\Expense::whereDate('created_at', now()->today())->sum('amount');
+                $lowStockCount = (int) \App\Models\Product::all()->filter(fn($p) => $p->isLowStock())->count();
+                $totalUdhaar = (float) \App\Models\Credit::where('status', 'pending')->get()->sum(fn($c) => $c->remaining_balance);
+            } catch (\Throwable $e) {
+                $shopName = "Kharcha Pani";
+                $todaySales = 0;
+                $todayExpenses = 0;
+                $lowStockCount = 0;
+                $totalUdhaar = 0;
+            }
+        @endphp
         <div x-data="voiceAssistant()" x-init="init()" class="relative">
             <!-- Wave bounce styles -->
             <style>
@@ -533,6 +548,15 @@
                     synth: window.speechSynthesis,
                     waveActive: false,
                     userRole: '{{ auth()->user()->role }}',
+                    shopStats: {
+                        name: @json($shopName),
+                        todaySales: @json($todaySales),
+                        todayExpenses: @json($todayExpenses),
+                        lowStockCount: @json($lowStockCount),
+                        totalUdhaar: @json($totalUdhaar),
+                        userName: @json(auth()->user()->name),
+                        userRole: '{{ auth()->user()->role }}'
+                    },
 
                     init() {
                         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -801,9 +825,169 @@
                             return;
                         }
 
-                        // 6. Unknown Command Fallback
-                        this.speak(this.lang === 'hi-IN' ? "माफ़ कीजिये, मुझे यह समझ नहीं आया" : "Sorry, I didn't recognize that command.");
-                        this.status = this.lang === 'hi-IN' ? "त्रुटि: नहीं समझा" : "Command not recognized";
+                        // ==========================================
+                        // Fallback Conversational NLP Matcher
+                        // ==========================================
+                        
+                        // 1. GREETINGS & CASUAL
+                        if (cleanText.match(/\b(hello|hi|hey|greetings|नमस्ते|हे|हेलो)\b/i)) {
+                            const greeting = this.lang === 'hi-IN' 
+                                ? `नमस्ते ${this.shopStats.userName}! मैं ${this.shopStats.name} का वॉइस असिस्टेंट हूँ। मैं आपकी कैसे मदद करूँ?` 
+                                : `Hello ${this.shopStats.userName}! I am the voice assistant for ${this.shopStats.name}. How can I help you manage your shop today?`;
+                            this.speak(greeting);
+                            this.status = this.lang === 'hi-IN' ? "नमस्ते!" : "Greeting";
+                            return;
+                        }
+                        if (cleanText.match(/\b(how\s+are\s+you|what's\s+up|क्या\s+हाल\s+है|कैसे\s+हो)\b/i)) {
+                            const response = this.lang === 'hi-IN'
+                                ? "मैं बहुत बढ़िया हूँ! दुकान के लेन-देन प्रबंधित करने के लिए तैयार हूँ। आज हमें क्या काम करना है?"
+                                : "I am doing great, ready to manage your shop transactions! What task should we do next?";
+                            this.speak(response);
+                            this.status = this.lang === 'hi-IN' ? "बातचीत" : "Chatting";
+                            return;
+                        }
+                        if (cleanText.match(/\b(thank\s+you|thanks|धन्यवाद|शुक्रिया)\b/i)) {
+                            const response = this.lang === 'hi-IN'
+                                ? "आपका स्वागत है! दुकान के लिए कुछ और चाहिए हो तो बताएं।"
+                                : "You're welcome! Let me know if you need anything else for your shop.";
+                            this.speak(response);
+                            this.status = this.lang === 'hi-IN' ? "स्वागत है" : "Thanked";
+                            return;
+                        }
+                        if (cleanText.match(/\b(who\s+made\s+you|who\s+created\s+you|किसने\s+बनाया)\b/i)) {
+                            const response = this.lang === 'hi-IN'
+                                ? "मुझे गूगल डीपमाइंड टीम द्वारा आपकी दुकान को आसानी से प्रबंधित करने के लिए बनाया गया है!"
+                                : "I was designed by the Google DeepMind team to help you manage your shop business seamlessly!";
+                            this.speak(response);
+                            this.status = this.lang === 'hi-IN' ? "परिचय" : "About Me";
+                            return;
+                        }
+
+                        // 2. FINANCIAL STATS QUERIES
+                        // Sales queries
+                        if (cleanText.match(/\b(today's?\s+sales?|total\s+sales?|बिक्री|सेल|आज\s+कितना\s+बेचा)\b/i)) {
+                            const response = this.lang === 'hi-IN'
+                                ? `आज की कुल बिक्री ${this.shopStats.todaySales} रुपये है।`
+                                : `Today's total sales are ${this.shopStats.todaySales} rupees.`;
+                            this.speak(response);
+                            this.status = this.lang === 'hi-IN' ? "आज की बिक्री" : "Sales Query";
+                            return;
+                        }
+                        // Expense queries
+                        if (cleanText.match(/\b(today's?\s+expenses?|total\s+expenses?|खर्चा|कितना\s+खर्च|आज\s+का\s+खर्च)\b/i)) {
+                            const response = this.lang === 'hi-IN'
+                                ? `आज का कुल खर्चा ${this.shopStats.todayExpenses} रुपये है।`
+                                : `Today's total expenses are ${this.shopStats.todayExpenses} rupees.`;
+                            this.speak(response);
+                            this.status = this.lang === 'hi-IN' ? "आज का खर्चा" : "Expenses Query";
+                            return;
+                        }
+                        // Profit queries
+                        if (cleanText.match(/\b(profit|net\s+profit|earnings|मुनाफा|फायदा|लाभ)\b/i)) {
+                            const profit = this.shopStats.todaySales - this.shopStats.todayExpenses;
+                            let response = "";
+                            if (this.lang === 'hi-IN') {
+                                if (profit >= 0) {
+                                    response = `आज की बिक्री और खर्चों के हिसाब से शुद्ध मुनाफा ${profit} रुपये है। बहुत बढ़िया!`;
+                                } else {
+                                    response = `आज का शुद्ध नुकसान ${Math.abs(profit)} रुपये है। कृपया अपने खर्चों पर ध्यान दें।`;
+                                }
+                            } else {
+                                if (profit >= 0) {
+                                    response = `Today's net profit is ${profit} rupees. Great job!`;
+                                } else {
+                                    response = `Today has a net loss of ${Math.abs(profit)} rupees. Keep an eye on your expenses.`;
+                                }
+                            }
+                            this.speak(response);
+                            this.status = this.lang === 'hi-IN' ? "मुनाफा" : "Profit Query";
+                            return;
+                        }
+                        // Udhaar / Credit queries
+                        if (cleanText.match(/\b(total\s+udhaar|outstanding\s+credit|pending\s+credit|उधार|बकाया)\b/i)) {
+                            const response = this.lang === 'hi-IN'
+                                ? `दुकान का कुल लंबित उधार ${this.shopStats.totalUdhaar} रुपये है।`
+                                : `The total outstanding credit for the shop is ${this.shopStats.totalUdhaar} rupees.`;
+                            this.speak(response);
+                            this.status = this.lang === 'hi-IN' ? "उधार" : "Credit Query";
+                            return;
+                        }
+                        // Low stock queries
+                        if (cleanText.match(/\b(low\s+stock|out\s+of\s+stock|stock\s+alerts|कम\s+स्टॉक|स्टॉक\s+कम)\b/i)) {
+                            let response = "";
+                            if (this.lang === 'hi-IN') {
+                                if (this.shopStats.lowStockCount > 0) {
+                                    response = `स्टॉक में ${this.shopStats.lowStockCount} सामान कम स्तर पर हैं। कृपया इन्वेंट्री सेक्शन में चेक करें।`;
+                                } else {
+                                    response = "सभी सामानों का स्टॉक सुरक्षित स्तर पर है। कोई भी सामान कम नहीं है।";
+                                }
+                            } else {
+                                if (this.shopStats.lowStockCount > 0) {
+                                    response = `There are ${this.shopStats.lowStockCount} products running low on stock. Please check the inventory.`;
+                                } else {
+                                    response = "All products have a healthy stock level. Nothing is running low.";
+                                }
+                            }
+                            this.speak(response);
+                            this.status = this.lang === 'hi-IN' ? "कम स्टॉक" : "Stock Query";
+                            return;
+                        }
+                        // Shop name queries
+                        if (cleanText.match(/\b(shop\s+name|name\s+of\s+shop|दुकान\s+का\s+नाम)\b/i)) {
+                            const response = this.lang === 'hi-IN'
+                                ? `इस दुकान का नाम ${this.shopStats.name} है।`
+                                : `The name of this shop is ${this.shopStats.name}.`;
+                            this.speak(response);
+                            this.status = this.lang === 'hi-IN' ? "दुकान का नाम" : "Shop Name Query";
+                            return;
+                        }
+                        // Who is logged in / Active role
+                        if (cleanText.match(/\b(who\s+am\s+i|logged\s+in|मेरा\s+रोल|कौन\s+लॉगिन)\b/i)) {
+                            const response = this.lang === 'hi-IN'
+                                ? `आप ${this.shopStats.userName} के रूप में लॉगिन हैं, और आपका रोल ${this.shopStats.userRole} है।`
+                                : `You are logged in as ${this.shopStats.userName}, and your role is ${this.shopStats.userRole}.`;
+                            this.speak(response);
+                            this.status = this.lang === 'hi-IN' ? "उपयोगकर्ता जानकारी" : "User Info Query";
+                            return;
+                        }
+
+                        // 3. HELP / GUIDE / GENERAL ASSISTANT QUESTIONS
+                        if (cleanText.match(/\b(help|guide|how\s+to\s+use|मदद|कैसे\s+चलाएं|कैसे\s+काम)\b/i)) {
+                            let response = "";
+                            if (this.lang === 'hi-IN') {
+                                response = `मैं आपकी आवाज़ से दुकान का प्रबंधन कर सकता हूँ। आप बोल सकते हैं: डैशबोर्ड पर जाओ, किराया खर्चा 15000, बेचा 500, या आज की बिक्री क्या है?`;
+                            } else {
+                                response = `I can help you manage your shop hands-free. You can say commands like: 'Go to dashboard', 'Add expense Rent 15000', 'Record sale 500', or ask 'What is today\'s sales?'`;
+                            }
+                            this.speak(response);
+                            this.status = this.lang === 'hi-IN' ? "मदद गाइड" : "Help Guide";
+                            return;
+                        }
+
+                        // 4. CONTEXT-AWARE FALLBACKS
+                        const currentPath = window.location.pathname;
+                        let pageHelpHi = "";
+                        let pageHelpEn = "";
+
+                        if (currentPath.includes('/sales/create')) {
+                            pageHelpHi = "आप अभी बिक्री बिलिंग स्क्रीन पर हैं। आप बोल सकते हैं 'बेचा 500' या किसी सामान को कार्ट में जोड़ने के लिए बोलें 'चावल जोड़ो'।";
+                            pageHelpEn = "You are currently on the POS sales billing screen. You can say 'Record sale 500' or say a product name like 'add rice' to add it to the cart.";
+                        } else if (currentPath.includes('/expenses')) {
+                            pageHelpHi = "आप अभी खर्चा स्क्रीन पर हैं। नया खर्चा जोड़ने के लिए बोलें 'किराया खर्चा 15000' या 'चाय खर्चा 200'।";
+                            pageHelpEn = "You are on the expenses screen. To record a new expense, you can say 'Add expense rent 15000' or 'Add expense tea 200'.";
+                        } else if (currentPath.includes('/inventory')) {
+                            pageHelpHi = "आप अभी इन्वेंट्री स्क्रीन पर हैं। किसी सामान को खोजने के लिए बोलें 'चावल ढूंढो' या 'मक्खन सर्च'।";
+                            pageHelpEn = "You are on the inventory stock manager. To find a product, you can say 'Search rice' or 'Search butter'.";
+                        } else if (currentPath.includes('/credits')) {
+                            pageHelpHi = "आप अभी उधार बहीखाता स्क्रीन पर हैं। दुकान का कुल बकाया जानने के लिए बोलें 'कुल उधार क्या है?'।";
+                            pageHelpEn = "You are on the outstanding credits ledger. To check the shop's total outstanding balance, say 'What is the total udhaar?'.";
+                        } else {
+                            pageHelpHi = `आप अभी ${this.shopStats.name} के डैशबोर्ड पर हैं। आप बोल सकते हैं: 'बिक्री पर जाओ', 'आज की बिक्री कितनी है', या 'मदद'।`;
+                            pageHelpEn = `You are on the ${this.shopStats.name} dashboard. You can say commands like: 'Go to sales', 'What is today\'s sales', or ask for 'help'.`;
+                        }
+
+                        this.speak(this.lang === 'hi-IN' ? pageHelpHi : pageHelpEn);
+                        this.status = this.lang === 'hi-IN' ? "सहायता सलाह" : "Contextual Help";
                     },
 
                     redirect(target) {
