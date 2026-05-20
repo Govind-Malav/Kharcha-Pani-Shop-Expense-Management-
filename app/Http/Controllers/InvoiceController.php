@@ -44,8 +44,10 @@ class InvoiceController extends Controller
         $request->validate(['channel' => 'required|in:email,whatsapp']);
 
         $shopSettings = ShopSetting::first();
+        $shopName = $shopSettings?->shop_name ?? 'Kharcha Pani';
+        $currency = $shopSettings?->currency ?? 'INR';
         $due = ($sale->payment_method === 'credit') ? ' (Marked as Credit/Udhaar)' : '';
-        $msg = "Hello, your invoice {$sale->invoice_number} from {$shopSettings->shop_name} for total amount {$sale->total_amount} {$shopSettings->currency} is generated.{$due}";
+        $msg = "Hello, your invoice {$sale->invoice_number} from {$shopName} for total amount {$sale->total_amount} {$currency} is generated.{$due}";
 
         if ($request->channel === 'whatsapp') {
             $phone = $sale->customer ? $sale->customer->phone : '';

@@ -73,14 +73,14 @@
 <body onload="window.print();">
 
     <div class="header text-center">
-        <div class="shop-name">{{ $shopSettings->shop_name ?? 'Kharcha Pani' }}</div>
-        @if($shopSettings->shop_address)
+        <div class="shop-name">{{ $shopSettings?->shop_name ?? 'Kharcha Pani' }}</div>
+        @if($shopSettings?->shop_address)
             <div style="font-size: 10px; margin-top: 2px;">{{ $shopSettings->shop_address }}</div>
         @endif
-        @if($shopSettings->shop_phone)
+        @if($shopSettings?->shop_phone)
             <div style="font-size: 10px;">Phone: {{ $shopSettings->shop_phone }}</div>
         @endif
-        @if($shopSettings->gst_number)
+        @if($shopSettings?->gst_number)
             <div style="font-size: 10px; font-weight: bold;">GSTIN: {{ $shopSettings->gst_number }}</div>
         @endif
     </div>

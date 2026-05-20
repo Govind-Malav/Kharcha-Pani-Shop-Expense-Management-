@@ -190,7 +190,7 @@
                     <div class="hidden md:flex items-center space-x-3 ml-2">
                         <span class="text-sm font-semibold text-slate-500">Live Workspace:</span>
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
-                            <i class="fa-solid fa-store mr-1.5"></i> {{ \App\Models\ShopSetting::first()->shop_name ?? 'Kharcha Pani' }}
+                            <i class="fa-solid fa-store mr-1.5"></i> {{ \App\Models\ShopSetting::first()?->shop_name ?? 'Kharcha Pani' }}
                         </span>
                     </div>
                 </div>

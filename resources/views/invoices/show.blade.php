@@ -35,12 +35,12 @@
                             <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-teal-400 to-emerald-400 text-slate-950 flex items-center justify-center font-bold shadow-md">
                                 <i class="fa-solid fa-store text-sm"></i>
                             </div>
-                            <span class="text-lg font-black text-slate-900 tracking-tight">{{ $shopSettings->shop_name ?? 'Kharcha Pani Shop' }}</span>
+                            <span class="text-lg font-black text-slate-900 tracking-tight">{{ $shopSettings?->shop_name ?? 'Kharcha Pani Shop' }}</span>
                         </div>
                         <div class="text-xs text-slate-500 space-y-1">
-                            <p class="font-medium"><i class="fa-solid fa-location-dot mr-1.5 w-3 text-center text-slate-400"></i>{{ $shopSettings->shop_address ?? 'Shop Location Details' }}</p>
-                            <p class="font-medium"><i class="fa-solid fa-phone mr-1.5 w-3 text-center text-slate-400"></i>{{ $shopSettings->shop_phone ?? 'Contact Number' }}</p>
-                            @if($shopSettings->gst_number)
+                            <p class="font-medium"><i class="fa-solid fa-location-dot mr-1.5 w-3 text-center text-slate-400"></i>{{ $shopSettings?->shop_address ?? 'Shop Location Details' }}</p>
+                            <p class="font-medium"><i class="fa-solid fa-phone mr-1.5 w-3 text-center text-slate-400"></i>{{ $shopSettings?->shop_phone ?? 'Contact Number' }}</p>
+                            @if($shopSettings?->gst_number)
                                 <p class="font-bold text-slate-700 uppercase tracking-wide mt-1.5">GSTIN: {{ $shopSettings->gst_number }}</p>
                             @endif
                         </div>

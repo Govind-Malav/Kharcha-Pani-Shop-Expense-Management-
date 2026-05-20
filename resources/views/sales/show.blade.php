@@ -37,13 +37,13 @@
                     <div class="w-8 h-8 rounded-lg bg-teal-500 text-slate-950 flex items-center justify-center font-bold">
                         <i class="fa-solid fa-store text-sm"></i>
                     </div>
-                    <span class="text-lg font-black text-slate-900 tracking-tight">{{ \App\Models\ShopSetting::first()->shop_name ?? 'Kharcha Pani Shop' }}</span>
+                    <span class="text-lg font-black text-slate-900 tracking-tight">{{ \App\Models\ShopSetting::first()?->shop_name ?? 'Kharcha Pani Shop' }}</span>
                 </div>
                 <div class="text-xs text-slate-500 space-y-1">
-                    <p class="font-medium"><i class="fa-solid fa-location-dot mr-1.5 w-3 text-center"></i>{{ \App\Models\ShopSetting::first()->shop_address ?? 'Shop Location Details' }}</p>
-                    <p class="font-medium"><i class="fa-solid fa-phone mr-1.5 w-3 text-center"></i>{{ \App\Models\ShopSetting::first()->shop_phone ?? 'Contact Number' }}</p>
-                    @if(\App\Models\ShopSetting::first()->gst_number)
-                        <p class="font-bold text-slate-700 uppercase tracking-wide mt-1.5">GSTIN: {{ \App\Models\ShopSetting::first()->gst_number }}</p>
+                    <p class="font-medium"><i class="fa-solid fa-location-dot mr-1.5 w-3 text-center"></i>{{ \App\Models\ShopSetting::first()?->shop_address ?? 'Shop Location Details' }}</p>
+                    <p class="font-medium"><i class="fa-solid fa-phone mr-1.5 w-3 text-center"></i>{{ \App\Models\ShopSetting::first()?->shop_phone ?? 'Contact Number' }}</p>
+                    @if(\App\Models\ShopSetting::first()?->gst_number)
+                        <p class="font-bold text-slate-700 uppercase tracking-wide mt-1.5">GSTIN: {{ \App\Models\ShopSetting::first()?->gst_number }}</p>
                     @endif
                 </div>
             </div>

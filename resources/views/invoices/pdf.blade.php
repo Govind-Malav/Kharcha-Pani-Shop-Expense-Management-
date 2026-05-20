@@ -181,17 +181,17 @@
     <table class="brand-section" style="width: 100%;">
         <tr>
             <td style="vertical-align: top;">
-                <div class="brand-logo">{{ $shopSettings->shop_name ?? 'Kharcha Pani' }}</div>
+                <div class="brand-logo">{{ $shopSettings?->shop_name ?? 'Kharcha Pani' }}</div>
                 <div class="brand-subtitle">Shop Expense & Management</div>
             </td>
             <td class="company-details" style="vertical-align: top;">
-                @if($shopSettings->shop_address)
+                @if($shopSettings?->shop_address)
                     <div>{{ $shopSettings->shop_address }}</div>
                 @endif
-                @if($shopSettings->shop_phone)
+                @if($shopSettings?->shop_phone)
                     <div>Phone: {{ $shopSettings->shop_phone }}</div>
                 @endif
-                @if($shopSettings->gst_number)
+                @if($shopSettings?->gst_number)
                     <div style="font-weight: bold; margin-top: 2px;">GSTIN: {{ $shopSettings->gst_number }}</div>
                 @endif
             </td>
@@ -302,7 +302,7 @@
     <!-- Footer -->
     <div class="footer">
         Invoice electronically generated and audited by <strong>Kharcha Pani</strong> ledger systems.<br>
-        &copy; {{ date('Y') }} {{ $shopSettings->shop_name ?? 'Kharcha Pani' }}.
+        &copy; {{ date('Y') }} {{ $shopSettings?->shop_name ?? 'Kharcha Pani' }}.
     </div>
 
 </body>
