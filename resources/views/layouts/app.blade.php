@@ -371,5 +371,376 @@
             </div>
         @endif
 
+        <!-- Floating Voice Assistant -->
+        <div x-data="voiceAssistant()" x-init="init()" class="relative">
+            <!-- Wave bounce styles -->
+            <style>
+                @keyframes waveBounce {
+                    0%, 100% { transform: scaleY(0.4); }
+                    50% { transform: scaleY(1.2); }
+                }
+                .wave-bar-1 { animation: waveBounce 0.8s ease-in-out infinite 100ms; transform-origin: bottom; }
+                .wave-bar-2 { animation: waveBounce 0.8s ease-in-out infinite 200ms; transform-origin: bottom; }
+                .wave-bar-3 { animation: waveBounce 0.8s ease-in-out infinite 300ms; transform-origin: bottom; }
+                .wave-bar-4 { animation: waveBounce 0.8s ease-in-out infinite 450ms; transform-origin: bottom; }
+                .wave-bar-5 { animation: waveBounce 0.8s ease-in-out infinite 150ms; transform-origin: bottom; }
+            </style>
+
+            <!-- Floating Mic Trigger Button -->
+            <button @click="toggle()" 
+                    class="fixed bottom-6 right-6 z-50 w-14 h-14 bg-gradient-to-tr from-teal-400 to-emerald-450 rounded-full flex items-center justify-center text-slate-905 shadow-xl shadow-teal-500/20 hover:scale-110 active:scale-95 transition-all cursor-pointer focus:outline-none"
+                    :class="isListening ? 'ring-4 ring-emerald-400/40' : ''"
+                    title="Voice Assistant">
+                <i class="fa-solid fa-microphone text-lg" :class="isListening ? 'text-slate-900 animate-pulse' : ''"></i>
+            </button>
+
+            <!-- Glassmorphic Console Panel -->
+            <div x-show="isOpen" 
+                 x-transition:enter="transition ease-out duration-300 transform"
+                 x-transition:enter-start="opacity-0 translate-y-10 scale-95"
+                 x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                 x-transition:leave="transition ease-in duration-200 transform"
+                 x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                 x-transition:leave-end="opacity-0 translate-y-10 scale-95"
+                 class="fixed bottom-24 right-6 w-80 bg-white/95 backdrop-blur-md border border-slate-100 rounded-2xl shadow-2xl p-5 z-50 space-y-4"
+                 style="display: none;">
+                
+                <!-- Console Title Header -->
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-6 h-6 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center">
+                            <i class="fa-solid fa-wand-magic-sparkles text-xs"></i>
+                        </div>
+                        <span class="font-extrabold text-sm text-slate-800">Voice Assistant</span>
+                    </div>
+                    <div class="flex items-center space-x-1.5">
+                        <!-- Language selector -->
+                        <button @click="setLang(lang === 'en-US' ? 'hi-IN' : 'en-US')" 
+                                class="px-2 py-0.5 rounded text-3xs font-extrabold tracking-wider bg-slate-100 hover:bg-slate-200 text-slate-600 uppercase border border-slate-200 transition-all">
+                            <span x-text="lang === 'en-US' ? 'English' : 'हिंदी'"></span>
+                        </button>
+                        <button @click="isOpen = false" class="text-slate-400 hover:text-slate-600 transition-colors pl-1">
+                            <i class="fa-solid fa-xmark text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Animated Recording Status -->
+                <div class="flex flex-col items-center justify-center py-4 bg-slate-50/50 rounded-xl border border-slate-100 relative overflow-hidden">
+                    <!-- Audio waves -->
+                    <div class="flex items-end justify-center space-x-1 h-8 mb-3" x-show="waveActive">
+                        <span class="w-1 bg-teal-400 rounded-full wave-bar-1" style="height: 10px"></span>
+                        <span class="w-1 bg-emerald-400 rounded-full wave-bar-2" style="height: 22px"></span>
+                        <span class="w-1 bg-teal-400 rounded-full wave-bar-3" style="height: 14px"></span>
+                        <span class="w-1 bg-emerald-400 rounded-full wave-bar-4" style="height: 26px"></span>
+                        <span class="w-1 bg-teal-400 rounded-full wave-bar-5" style="height: 10px"></span>
+                    </div>
+                    
+                    <button @click="isListening ? stopListening() : startListening()" 
+                            class="w-12 h-12 rounded-full flex items-center justify-center transition-all focus:outline-none cursor-pointer"
+                            :class="isListening ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20' : 'bg-teal-500 text-white shadow-lg shadow-teal-500/20'">
+                        <i class="fa-solid text-sm" :class="isListening ? 'fa-stop' : 'fa-microphone'"></i>
+                    </button>
+                    
+                    <p class="text-3xs font-extrabold uppercase tracking-widest text-slate-400 mt-2.5" x-text="status"></p>
+                </div>
+
+                <!-- Real-Time Speech Display -->
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 min-h-[50px] flex items-center justify-center text-center">
+                    <p class="text-xs font-semibold leading-relaxed" :class="transcript ? 'text-slate-800 italic' : 'text-slate-400'" 
+                       x-text="transcript ? '“' + transcript + '”' : (lang === 'hi-IN' ? 'बोलने के लिए माइक दबाएं...' : 'Tap mic to say a command...')"></p>
+                </div>
+
+                <!-- Quick commands help cheat-sheet -->
+                <div class="space-y-1.5 text-2xs">
+                    <span class="block font-bold text-slate-500 uppercase tracking-wider">Try saying:</span>
+                    <div class="divide-y divide-slate-100 bg-slate-50 rounded-xl border border-slate-100 overflow-hidden">
+                        <div class="p-2 text-slate-600 flex justify-between items-center hover:bg-slate-100/50">
+                            <span class="font-semibold" x-text="lang === 'hi-IN' ? 'किराया खर्चा 15000' : 'Add expense Rent 15000'"></span>
+                            <span class="text-slate-450 font-medium">Record Expense</span>
+                        </div>
+                        <div class="p-2 text-slate-600 flex justify-between items-center hover:bg-slate-100/50">
+                            <span class="font-semibold" x-text="lang === 'hi-IN' ? 'बेचा 500' : 'Add sale 500'"></span>
+                            <span class="text-slate-450 font-medium">POS Order</span>
+                        </div>
+                        <div class="p-2 text-slate-600 flex justify-between items-center hover:bg-slate-100/50">
+                            <span class="font-semibold" x-text="lang === 'hi-IN' ? 'खर्चा पर जाओ' : 'Go to Expenses'"></span>
+                            <span class="text-slate-450 font-medium">Navigation</span>
+                        </div>
+                        <div class="p-2 text-slate-600 flex justify-between items-center hover:bg-slate-100/50">
+                            <span class="font-semibold" x-text="lang === 'hi-IN' ? 'चावल ढूंढो' : 'Search Rice'"></span>
+                            <span class="text-slate-450 font-medium">Search stock</span>
+                        </div>
+                        <!-- POS Page specific hint -->
+                        <div x-show="window.location.pathname.includes('/sales/create')" class="p-2 text-indigo-700 bg-indigo-50/40 flex justify-between items-center hover:bg-indigo-50">
+                            <span class="font-bold" x-text="lang === 'hi-IN' ? 'मक्खन जोड़ो' : 'Add Butter'"></span>
+                            <span class="font-bold text-indigo-500">Cart Command</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <script>
+            function voiceAssistant() {
+                return {
+                    isOpen: false,
+                    isListening: false,
+                    lang: 'en-US',
+                    transcript: '',
+                    status: 'Ready',
+                    recognition: null,
+                    synth: window.speechSynthesis,
+                    waveActive: false,
+
+                    init() {
+                        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                        if (!SpeechRecognition) {
+                            this.status = 'Not supported in browser';
+                            return;
+                        }
+                        this.recognition = new SpeechRecognition();
+                        this.recognition.continuous = false;
+                        this.recognition.interimResults = true;
+
+                        this.recognition.onstart = () => {
+                            this.isListening = true;
+                            this.waveActive = true;
+                            this.status = this.lang === 'hi-IN' ? 'सुन रहा हूँ...' : 'Listening...';
+                            this.transcript = '';
+                        };
+
+                        this.recognition.onresult = (event) => {
+                            let interimTranscript = '';
+                            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                                if (event.results[i].isFinal) {
+                                    this.transcript = event.results[i][0].transcript;
+                                    this.processCommand(this.transcript);
+                                } else {
+                                    interimTranscript += event.results[i][0].transcript;
+                                    this.transcript = interimTranscript;
+                                }
+                            }
+                        };
+
+                        this.recognition.onerror = (event) => {
+                            console.error(event);
+                            this.status = 'Error: ' + event.error;
+                            this.isListening = false;
+                            this.waveActive = false;
+                        };
+
+                        this.recognition.onend = () => {
+                            this.isListening = false;
+                            this.waveActive = false;
+                            if (this.status === 'Listening...' || this.status === 'सुन रहा हूँ...') {
+                                this.status = this.lang === 'hi-IN' ? 'तैयार है' : 'Ready';
+                            }
+                        };
+                    },
+
+                    toggle() {
+                        this.isOpen = !this.isOpen;
+                        if (this.isOpen) {
+                            this.speak(this.lang === 'hi-IN' ? 'नमस्ते, मैं आपकी कैसे मदद करूँ?' : 'Hello! How can I help you today?');
+                            this.status = this.lang === 'hi-IN' ? 'तैयार है' : 'Ready';
+                        } else {
+                            this.stopListening();
+                        }
+                    },
+
+                    startListening() {
+                        if (!this.recognition) return;
+                        this.recognition.lang = this.lang;
+                        try {
+                            this.recognition.start();
+                        } catch (e) {
+                            console.log(e);
+                        }
+                    },
+
+                    stopListening() {
+                        if (this.recognition && this.isListening) {
+                            this.recognition.stop();
+                        }
+                    },
+
+                    setLang(l) {
+                        this.lang = l;
+                        this.status = l === 'hi-IN' ? 'भाषा: हिंदी' : 'Language: English';
+                        this.speak(l === 'hi-IN' ? 'हिंदी भाषा चुनी गई' : 'English mode activated');
+                    },
+
+                    speak(text) {
+                        if (!this.synth) return;
+                        this.synth.cancel();
+                        const utterance = new SpeechSynthesisUtterance(text);
+                        utterance.lang = this.lang;
+                        this.synth.speak(utterance);
+                    },
+
+                    processCommand(commandText) {
+                        const cleanText = commandText.trim().toLowerCase();
+                        this.status = this.lang === 'hi-IN' ? 'प्रोसेस कर रहा हूँ...' : 'Processing...';
+
+                        // 1. Expense Command Parser
+                        // English: "add expense rent 15000" / "add expense electricity 3200"
+                        const expMatchEn = cleanText.match(/(?:add\s+expense|record\s+expense|record\s+spend)\s+(?:for\s+)?(.+?)\s+(?:of\s+)?(?:rs\.?|inr|rupees)?\s*(\d+(?:\.\d+)?)/i);
+                        if (expMatchEn) {
+                            const title = expMatchEn[1];
+                            const amount = expMatchEn[2];
+                            this.speak(`Recording expense for ${title} of ${amount} rupees.`);
+                            setTimeout(() => {
+                                window.location.href = `/expenses/create?title=${encodeURIComponent(title)}&amount=${amount}&ref=voice`;
+                            }, 1200);
+                            return;
+                        }
+
+                        // Hindi: "किराया का खर्चा 15000" / "चाय खर्चा 250" / "250 रुपया चाय खर्चा"
+                        const expMatchHi = cleanText.match(/(.+?)\s+(?:का\s+)?खर्चा\s+(?:रुपया|रुपये)?\s*(\d+)/i) || 
+                                           cleanText.match(/(\d+)\s*(?:रुपया|रुपये)?\s*(?:का\s+)?(.+?)\s+खर्चा/i);
+                        if (expMatchHi) {
+                            let title, amount;
+                            if (isNaN(expMatchHi[1].trim())) {
+                                title = expMatchHi[1].trim();
+                                amount = expMatchHi[2].trim();
+                            } else {
+                                amount = expMatchHi[1].trim();
+                                title = expMatchHi[2].trim();
+                            }
+                            this.speak(`${title} का खर्चा ${amount} रुपये दर्ज कर रहे हैं`);
+                            setTimeout(() => {
+                                window.location.href = `/expenses/create?title=${encodeURIComponent(title)}&amount=${amount}&ref=voice`;
+                            }, 1200);
+                            return;
+                        }
+
+                        // 2. Navigation Commands
+                        // English: "go to dashboard" / "go to sales"
+                        const navMatchEn = cleanText.match(/go\s+to\s+(dashboard|sales|pos|expenses|inventory|stock|credits|udhaar|settings)/i);
+                        if (navMatchEn) {
+                            const target = navMatchEn[1];
+                            this.speak("Navigating to " + target);
+                            setTimeout(() => this.redirect(target), 1000);
+                            return;
+                        }
+
+                        // Hindi: "डैशबोर्ड पर जाओ" / "बिक्री पर जाओ"
+                        const navMatchHi = cleanText.match(/(डैशबोर्ड|बिक्री|खर्चा|सामान|स्टॉक|उधार|सेटिंग)\s*(?:पर\s+)?जाओ/i);
+                        if (navMatchHi) {
+                            const target = navMatchHi[1];
+                            const engTarget = this.mapHindiNav(target);
+                            this.speak(target + " पर जा रहे हैं");
+                            setTimeout(() => this.redirect(engTarget), 1000);
+                            return;
+                        }
+
+                        // 3. POS Add Item (Only active on POS screen)
+                        // English: "add rice" / "add butter"
+                        const addPosMatchEn = cleanText.match(/(?:add|insert)\s+(.+?)(?:\s+to\s+cart)?$/i);
+                        if (addPosMatchEn && window.location.pathname.includes('/sales/create')) {
+                            const productName = addPosMatchEn[1];
+                            this.speak("Adding " + productName);
+                            window.dispatchEvent(new CustomEvent('voice-add-item', { detail: { query: productName } }));
+                            this.status = "Added to cart";
+                            return;
+                        }
+
+                        // Hindi: "चावल जोड़ो" / "मक्खन जोड़ो"
+                        const addPosMatchHi = cleanText.match(/(.+?)\s+(?:जोड़ो|ऐड करो|ऐड करो)$/i);
+                        if (addPosMatchHi && window.location.pathname.includes('/sales/create')) {
+                            const productName = addPosMatchHi[1];
+                            this.speak(productName + " जोड़ रहे हैं");
+                            window.dispatchEvent(new CustomEvent('voice-add-item', { detail: { query: productName } }));
+                            this.status = "कार्ट में जोड़ा गया";
+                            return;
+                        }
+
+                        // 4. Record Quick Sales
+                        // English: "add sale 500" / "sell 500"
+                        const saleMatchEn = cleanText.match(/(?:add\s+sale|record\s+sale|sell)\s+(?:of\s+)?(?:rs\.?|inr|rupees)?\s*(\d+(?:\.\d+)?)/i);
+                        if (saleMatchEn) {
+                            const amount = saleMatchEn[1];
+                            this.speak(`Recording walk-in sale of ${amount} rupees.`);
+                            setTimeout(() => {
+                                window.location.href = `/sales/create?amount=${amount}&ref=voice`;
+                            }, 1200);
+                            return;
+                        }
+
+                        // Hindi: "बिक्री 500" / "बेचा 500"
+                        const saleMatchHi = cleanText.match(/(?:बेचा|बिक्री|सेल)\s*(?:रुपया|रुपये)?\s*(\d+)/i);
+                        if (saleMatchHi) {
+                            const amount = saleMatchHi[1];
+                            this.speak(`${amount} रुपये की बिक्री दर्ज कर रहे हैं`);
+                            setTimeout(() => {
+                                window.location.href = `/sales/create?amount=${amount}&ref=voice`;
+                            }, 1200);
+                            return;
+                        }
+
+                        // 5. Inventory Product Search
+                        // English: "search rice" / "search for amul butter"
+                        const searchMatchEn = cleanText.match(/(?:search|find|lookup)\s+(?:for\s+)?(.+)/i);
+                        if (searchMatchEn) {
+                            const query = searchMatchEn[1];
+                            this.speak("Searching for " + query);
+                            setTimeout(() => {
+                                window.location.href = `/inventory?search=${encodeURIComponent(query)}`;
+                            }, 1000);
+                            return;
+                        }
+
+                        // Hindi: "चावल ढूंढो" / "मक्खन सर्च"
+                        const searchMatchHi = cleanText.match(/(.+?)\s+(?:सर्च|ढूंढो|खोजो)/i) || cleanText.match(/सर्च\s+(.+)/i);
+                        if (searchMatchHi) {
+                            const query = searchMatchHi[1];
+                            this.speak("स्टॉक में " + query + " खोज रहे हैं");
+                            setTimeout(() => {
+                                window.location.href = `/inventory?search=${encodeURIComponent(query)}`;
+                            }, 1000);
+                            return;
+                        }
+
+                        // 6. Unknown Command Fallback
+                        this.speak(this.lang === 'hi-IN' ? "माफ़ कीजिये, मुझे यह समझ नहीं आया" : "Sorry, I didn't recognize that command.");
+                        this.status = this.lang === 'hi-IN' ? "त्रुटि: नहीं समझा" : "Command not recognized";
+                    },
+
+                    redirect(target) {
+                        const routes = {
+                            dashboard: "{{ route('dashboard') }}",
+                            sales: "{{ route('sales.create') }}",
+                            pos: "{{ route('sales.create') }}",
+                            expenses: "{{ route('expenses.index') }}",
+                            inventory: "{{ route('inventory.index') }}",
+                            stock: "{{ route('inventory.index') }}",
+                            credits: "{{ route('credits.index') }}",
+                            udhaar: "{{ route('credits.index') }}",
+                            settings: "{{ route('settings.index') }}"
+                        };
+                        if (routes[target]) {
+                            window.location.href = routes[target];
+                        }
+                    },
+
+                    mapHindiNav(hiText) {
+                        const mapping = {
+                            'डैशबोर्ड': 'dashboard',
+                            'बिक्री': 'sales',
+                            'खर्चा': 'expenses',
+                            'सामान': 'inventory',
+                            'स्टॉक': 'inventory',
+                            'उधार': 'credits',
+                            'सेटिंग': 'settings'
+                        };
+                        return mapping[hiText] || 'dashboard';
+                    }
+                };
+            }
+        </script>
+
+        @stack('scripts')
     </body>
 </html>

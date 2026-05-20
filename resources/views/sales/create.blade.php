@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="space-y-6" x-data="posApp()">
+<div class="space-y-6" x-data="posApp()" x-init="init()" x-on:voice-add-item.window="addToCartFromVoice($event.detail.query)">
 
     {{-- Header --}}
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -32,6 +32,17 @@
                     @endforeach
                 </ul>
             @endif
+        </div>
+    @endif
+
+    {{-- Voice command pre-fill indicator banner --}}
+    @if(request('ref') === 'voice' && request('amount'))
+        <div class="bg-teal-50/80 border border-teal-100 text-teal-850 p-4 rounded-2xl text-xs font-semibold flex items-start max-w-4xl">
+            <i class="fa-solid fa-microphone-lines text-teal-600 text-lg mr-3 mt-0.5 animate-pulse"></i>
+            <div>
+                <span class="font-extrabold text-teal-900 block text-sm">Voice Command Detected!</span>
+                <p class="text-slate-500 mt-1">You requested a sale of <span class="font-bold text-teal-700">₹{{ request('amount') }}</span>. Please select products from the catalog on the left to add them to the cart and complete this sale.</p>
+            </div>
         </div>
     @endif
 
@@ -291,6 +302,25 @@
             custType: 'walkin',
             payMethod: 'cash',
             taxRate: 0,
+
+            init() {
+                console.log('POS initialized with ' + this.products.length + ' products.');
+            },
+
+            addToCartFromVoice(query) {
+                if (!query) return;
+                const search = query.toLowerCase().trim();
+                const matchedProduct = this.products.find(p => {
+                    return p.name.toLowerCase().includes(search) || 
+                           p.sku.toLowerCase().includes(search);
+                });
+
+                if (matchedProduct) {
+                    this.addToCart(matchedProduct);
+                } else {
+                    alert(`Product "${query}" not found in active inventory.`);
+                }
+            },
 
             filteredProducts() {
                 if(!this.searchQuery) return this.products;

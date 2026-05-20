@@ -36,12 +36,23 @@
         <form method="POST" action="{{ route('expenses.store') }}" enctype="multipart/form-data" class="p-6 md:p-8 space-y-6">
             @csrf
 
+            {{-- Voice command pre-fill indicator banner --}}
+            @if(request('ref') === 'voice')
+                <div class="bg-teal-50/80 border border-teal-100 text-teal-850 p-4 rounded-2xl text-xs font-semibold flex items-start">
+                    <i class="fa-solid fa-microphone-lines text-teal-600 text-lg mr-3 mt-0.5"></i>
+                    <div>
+                        <span class="font-extrabold text-teal-900 block text-sm">Voice Command Auto-Parsed!</span>
+                        <p class="text-slate-500 mt-1">Title and Amount have been dynamically pre-filled from your speech. Please check the fields, select a category, and click save.</p>
+                    </div>
+                </div>
+            @endif
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                 {{-- Title --}}
                 <div class="md:col-span-2">
                     <label for="title" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Expense Title *</label>
-                    <input type="text" name="title" id="title" value="{{ old('title') }}" required placeholder="e.g. Electric bill April, Tea & Snacks" 
+                    <input type="text" name="title" id="title" value="{{ request('title', old('title')) }}" required placeholder="e.g. Electric bill April, Tea & Snacks" 
                            class="w-full px-4 py-2.5 text-sm rounded-xl border-slate-200 focus:border-teal-500 focus:ring focus:ring-teal-200/50 transition-colors">
                 </div>
 
@@ -52,7 +63,7 @@
                         <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 text-sm font-semibold">
                             ₹
                         </div>
-                        <input type="number" name="amount" id="amount" value="{{ old('amount') }}" step="0.01" min="0.01" required placeholder="0.00" 
+                        <input type="number" name="amount" id="amount" value="{{ request('amount', old('amount')) }}" step="0.01" min="0.01" required placeholder="0.00" 
                                class="w-full pl-8 pr-4 py-2.5 text-sm rounded-xl border-slate-200 focus:border-teal-500 focus:ring focus:ring-teal-200/50 transition-colors">
                     </div>
                 </div>
@@ -64,7 +75,17 @@
                             class="w-full py-2.5 text-sm rounded-xl border-slate-200 focus:border-teal-500 focus:ring focus:ring-teal-200/50 transition-colors">
                         <option value="" disabled selected>Select Category</option>
                         @foreach($categories as $cat)
-                            <option value="{{ $cat->id }}" {{ old('category_id') == $cat->id ? 'selected' : '' }}>{{ $cat->name }}</option>
+                            @php
+                                $isVoiceMatch = false;
+                                if (request('title')) {
+                                    $titleLower = strtolower(request('title'));
+                                    $catLower = strtolower($cat->name);
+                                    if (strpos($titleLower, $catLower) !== false || strpos($catLower, $titleLower) !== false) {
+                                        $isVoiceMatch = true;
+                                    }
+                                }
+                            @endphp
+                            <option value="{{ $cat->id }}" {{ (old('category_id') == $cat->id || request('category_id') == $cat->id || $isVoiceMatch) ? 'selected' : '' }}>{{ $cat->name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -81,11 +102,11 @@
                     <label for="payment_type" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Payment Mode *</label>
                     <select name="payment_type" id="payment_type" required 
                             class="w-full py-2.5 text-sm rounded-xl border-slate-200 focus:border-teal-500 focus:ring focus:ring-teal-200/50 transition-colors">
-                        <option value="cash" {{ old('payment_type', 'cash') === 'cash' ? 'selected' : '' }}>Cash</option>
-                        <option value="card" {{ old('payment_type') === 'card' ? 'selected' : '' }}>Card</option>
-                        <option value="upi" {{ old('payment_type') === 'upi' ? 'selected' : '' }}>UPI (GPay / PhonePe / Paytm)</option>
-                        <option value="net_banking" {{ old('payment_type') === 'net_banking' ? 'selected' : '' }}>Net Banking</option>
-                        <option value="other" {{ old('payment_type') === 'other' ? 'selected' : '' }}>Other</option>
+                        <option value="cash" {{ old('payment_type', request('payment_type', 'cash')) === 'cash' ? 'selected' : '' }}>Cash</option>
+                        <option value="card" {{ old('payment_type', request('payment_type')) === 'card' ? 'selected' : '' }}>Card</option>
+                        <option value="upi" {{ old('payment_type', request('payment_type')) === 'upi' ? 'selected' : '' }}>UPI (GPay / PhonePe / Paytm)</option>
+                        <option value="net_banking" {{ old('payment_type', request('payment_type')) === 'net_banking' ? 'selected' : '' }}>Net Banking</option>
+                        <option value="other" {{ old('payment_type', request('payment_type')) === 'other' ? 'selected' : '' }}>Other</option>
                     </select>
                 </div>
 
