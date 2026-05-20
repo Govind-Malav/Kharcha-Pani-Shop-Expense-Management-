@@ -52,8 +52,17 @@ class DashboardController extends Controller
         $now = Carbon::now();
         $currentYear = $now->year;
 
+        $dbDriver = DB::connection()->getDriverName();
+        if ($dbDriver === 'pgsql') {
+            $monthExpr = 'EXTRACT(MONTH FROM date) as month';
+        } elseif ($dbDriver === 'sqlite') {
+            $monthExpr = 'cast(strftime("%m", date) as integer) as month';
+        } else {
+            $monthExpr = 'MONTH(date) as month';
+        }
+
         // A. Monthly Sales for Current Year (Bar Chart)
-        $monthlySalesData = Sale::selectRaw('MONTH(date) as month, SUM(total_amount) as total')
+        $monthlySalesData = Sale::selectRaw($monthExpr . ', SUM(total_amount) as total')
             ->whereYear('date', $currentYear)
             ->groupBy('month')
             ->pluck('total', 'month')
@@ -61,11 +70,12 @@ class DashboardController extends Controller
 
         $salesChartData = [];
         for ($i = 1; $i <= 12; $i++) {
-            $salesChartData[] = $monthlySalesData[$i] ?? 0.00;
+            $val = $monthlySalesData[$i] ?? $monthlySalesData[str_pad($i, 2, '0', STR_PAD_LEFT)] ?? 0.00;
+            $salesChartData[] = (float) $val;
         }
 
         // B. Monthly Expenses for Current Year (Line Chart Helper)
-        $monthlyExpensesData = Expense::selectRaw('MONTH(date) as month, SUM(amount) as total')
+        $monthlyExpensesData = Expense::selectRaw($monthExpr . ', SUM(amount) as total')
             ->whereYear('date', $currentYear)
             ->groupBy('month')
             ->pluck('total', 'month')
@@ -73,7 +83,8 @@ class DashboardController extends Controller
 
         $expensesChartData = [];
         for ($i = 1; $i <= 12; $i++) {
-            $expensesChartData[] = $monthlyExpensesData[$i] ?? 0.00;
+            $val = $monthlyExpensesData[$i] ?? $monthlyExpensesData[str_pad($i, 2, '0', STR_PAD_LEFT)] ?? 0.00;
+            $expensesChartData[] = (float) $val;
         }
 
         // C. Monthly Profit Trends (Line Chart)
