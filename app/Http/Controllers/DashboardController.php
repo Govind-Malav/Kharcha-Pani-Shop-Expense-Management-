@@ -55,16 +55,19 @@ class DashboardController extends Controller
         $dbDriver = DB::connection()->getDriverName();
         if ($dbDriver === 'pgsql') {
             $monthExpr = 'EXTRACT(MONTH FROM date) as month';
+            $groupByExpr = DB::raw('EXTRACT(MONTH FROM date)');
         } elseif ($dbDriver === 'sqlite') {
             $monthExpr = 'cast(strftime("%m", date) as integer) as month';
+            $groupByExpr = DB::raw('cast(strftime("%m", date) as integer)');
         } else {
             $monthExpr = 'MONTH(date) as month';
+            $groupByExpr = DB::raw('MONTH(date)');
         }
 
         // A. Monthly Sales for Current Year (Bar Chart)
         $monthlySalesData = Sale::selectRaw($monthExpr . ', SUM(total_amount) as total')
             ->whereYear('date', $currentYear)
-            ->groupBy('month')
+            ->groupBy($groupByExpr)
             ->pluck('total', 'month')
             ->toArray();
 
@@ -77,7 +80,7 @@ class DashboardController extends Controller
         // B. Monthly Expenses for Current Year (Line Chart Helper)
         $monthlyExpensesData = Expense::selectRaw($monthExpr . ', SUM(amount) as total')
             ->whereYear('date', $currentYear)
-            ->groupBy('month')
+            ->groupBy($groupByExpr)
             ->pluck('total', 'month')
             ->toArray();
 
